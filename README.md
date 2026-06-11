@@ -20,7 +20,35 @@ We run the same scenarios against every shipped memory system (Mem0, Zep, Cognee
 
 ## Status
 
-**Design phase.** See [`DESIGN.md`](./DESIGN.md). No harness code yet. Implementation lands in a follow-up.
+**Harness skeleton landed (v0.1, Week-1 scope).** The adapter interface, a
+reference `FakeSUT`, all seven scenarios (S1–S7) with the metric names from
+[`DESIGN.md`](./DESIGN.md), the run loop, and the output format are implemented
+and validated end-to-end. Real SUT adapters (pgvector, AgentMem, Mem0, …) are
+next. See [`DESIGN.md`](./DESIGN.md) for the methodology.
+
+## Running
+
+No third-party deps for the core + the reference SUT — stdlib only:
+
+```bash
+python3 -m agentmem_bench --sut fake --scenarios all   # full run
+python3 -m agentmem_bench --sut fake --scenarios s1,s4 # a subset
+python3 -m agentmem_bench --list                        # SUTs + scenarios
+python3 tests/test_smoke.py                             # smoke tests (no pytest needed)
+```
+
+A run writes a self-contained `runs/<run_id>/` directory: `manifest.json`,
+`scenarios/<slug>.jsonl` (one line per metric), `timing.json`, `cost.json`, and
+a human-readable `summary.md` scorecard. `runs/` is gitignored (published as
+release assets, per the design).
+
+### Adding a system under test
+
+Implement `agentmem_bench.adapter.SUTAdapter` (the small `write` / `search` /
+`check_conflicts` / `set_policy` / replica surface), declare its
+`capabilities`, and register it in `agentmem_bench/suts/__init__.py`. Methods a
+system can't support raise `Unsupported` → the affected metrics score `N/A`, not
+a failure. `FakeSUT` (`agentmem_bench/suts/fake.py`) is the worked reference.
 
 ## License
 
