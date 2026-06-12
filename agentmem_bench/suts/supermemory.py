@@ -63,30 +63,25 @@ class SupermemorySUT(SUTAdapter):
     def search(self, query, *, agent_id, workflow_id=None, top_k=5, at_time=None) -> list[Hit]:
         if at_time is not None:
             raise Unsupported("supermemory has no temporal (at_time) query")
-        resp = self._c.search.execute(q=query, container_tag=self._tag(workflow_id), limit=top_k)
-        results = getattr(resp, "results", None) or []
+        # search.memories is memory search; search.execute is document-chunk search
+        # (returns nothing for these short memories).
+        resp = self._c.search.memories(q=query, container_tag=self._tag(workflow_id), limit=top_k)
+        results = getattr(resp, "results", None) or getattr(resp, "memories", None) or []
         hits: list[Hit] = []
         for r in results:
-            # SDK returns pydantic models; tolerate dict-or-attr access.
-            def g(obj, *names, default=None):
-                for n in names:
-                    v = obj.get(n) if isinstance(obj, dict) else getattr(obj, n, None)
-                    if v is not None:
-                        return v
-                return default
-
-            meta = g(r, "metadata", default={}) or {}
+            d = r.model_dump() if hasattr(r, "model_dump") else (r if isinstance(r, dict) else {})
+            meta = d.get("metadata") or {}
             if not self._visible(meta, agent_id):
                 continue
-            content = g(r, "content", "memory", "chunk", "text", default="")
+            content = d.get("memory") or d.get("chunk") or ""
             hits.append(
                 Hit(
-                    id=str(g(r, "id", "document_id", "documentId", default="")),
-                    content=content or "",
-                    agent_id=(meta.get("writer") if isinstance(meta, dict) else None) or "",
-                    scope=(meta.get("scope") if isinstance(meta, dict) else "") or "",
+                    id=str(d.get("id", "")),
+                    content=content,
+                    agent_id=meta.get("writer") or "",
+                    scope=meta.get("scope") or "",
                     created_at=datetime.now(timezone.utc),
-                    score=float(g(r, "score", default=0.0) or 0.0),
+                    score=float(d.get("similarity") or d.get("score") or 0.0),
                 )
             )
         return hits

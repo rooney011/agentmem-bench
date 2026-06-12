@@ -9,6 +9,7 @@ runs/<id>/scenarios/<scenario>.jsonl.
 from __future__ import annotations
 
 import abc
+import os
 import time
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -69,7 +70,10 @@ class Scenario(abc.ABC):
         """Wait until `needle` is visible via search (lets an async-indexing SUT
         settle, and avoids hammering hosted backends with truly back-to-back
         conflicting writes). Returns immediately for in-process SUTs; bounded wait
-        otherwise. Best-effort — never raises."""
+        otherwise. Best-effort — never raises. `AMBENCH_SETTLE_TIMEOUT` overrides
+        the cap for slow pipelines (e.g. Supermemory's ~30–60s indexing)."""
+        timeout = float(os.environ.get("AMBENCH_SETTLE_TIMEOUT") or timeout)
+        poll = float(os.environ.get("AMBENCH_SETTLE_POLL") or 2.0)
         deadline = time.time() + timeout
         needle = needle.lower()
         while time.time() < deadline:
@@ -79,4 +83,4 @@ class Scenario(abc.ABC):
                 hits = []
             if any(needle in h.content.lower() for h in hits):
                 return
-            time.sleep(0.5)
+            time.sleep(poll)
