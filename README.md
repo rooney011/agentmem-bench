@@ -42,6 +42,40 @@ A run writes a self-contained `runs/<run_id>/` directory: `manifest.json`,
 a human-readable `summary.md` scorecard. `runs/` is gitignored (published as
 release assets, per the design).
 
+### Real SUT adapters
+
+```bash
+# pgvector floor — needs Postgres+pgvector + OpenAI embeddings
+docker run -d --name amb-pg -e POSTGRES_PASSWORD=bench -e POSTGRES_DB=bench -p 5433:5432 pgvector/pgvector:pg16
+DATABASE_URL=postgresql://postgres:bench@localhost:5433/bench OPENAI_API_KEY=... \
+  python -m agentmem_bench --sut pgvector --scenarios all      # extra: psycopg[binary], openai
+
+MEM0_API_KEY=...      python -m agentmem_bench --sut mem0 --scenarios all     # extra: mem0ai
+AGENTMEM_API_KEY=...  python -m agentmem_bench --sut agentmem --scenarios all # extra: httpx
+```
+
+Hosted SUTs with rate/quota limits can scale S7 down with `AMBENCH_S7_WRITES` /
+`AMBENCH_S7_SEARCHES` (default stays the design's 1000/500); latency percentiles
+are size-robust.
+
+### Comparison matrix
+
+```bash
+python -m agentmem_bench.compare      # reads runs/ -> results/COMPARISON.md
+```
+
+`compare.py` merges multiple (incl. partial / re-run) `runs/` into one matrix:
+for each (SUT, scenario) it uses the most recent run with real metrics and prints
+provenance. **The current matrix is committed at [`results/COMPARISON.md`](./results/COMPARISON.md).**
+
+Headline so far (pgvector floor vs mem0 vs agentmem): on multi-agent
+coordination, **only AgentMem fills S1** (conflict detection + resolution) — the
+one metric that needs a real memory system. **Mem0 ties the raw vector floor**
+(no conflict/policy/temporal/CRDT API) and *loses* `S3.team_visible` to it
+(content-dedup ignores scope changes). S3/S5 don't separate anyone; S4 is N/A for
+every hosted system (no replica API). AgentMem's S5/S6/S7 await a Gemini-quota
+reset; its S2 temporal has a gap.
+
 ### Adding a system under test
 
 Implement `agentmem_bench.adapter.SUTAdapter` (the small `write` / `search` /
