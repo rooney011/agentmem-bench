@@ -39,11 +39,14 @@ class S5Isolation(Scenario):
                       agent_id=rng.choice(agents_b), scope="team", workflow_id=WF_B)
             b_tokens.append(tok)
 
-        # Reader in workflow A searches for each workflow-B token.
+        # Reader in workflow A searches for each workflow-B token. A leak is a
+        # returned hit that is ACTUALLY workflow-B content — not merely a non-empty
+        # result. A vector store returns its top-k nearest rows regardless of
+        # relevance, so "any hit" would false-positive; we check content identity.
         leaks = 0
         for tok in b_tokens:
             hits = sut.search(tok, agent_id="a1", workflow_id=WF_A)
-            if hits:
+            if any(tok.lower() in h.content.lower() for h in hits):
                 leaks += 1
         rate = leaks / len(b_tokens)
         return [self.check("S5.leakage_rate", rate == 0.0, value=f"{rate:.1%}",

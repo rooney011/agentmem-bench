@@ -1,14 +1,29 @@
-"""SUT adapter registry. Real systems register here as they're implemented."""
+"""SUT adapter registry. Real systems register a lazy factory here so importing
+this module never pulls a system's optional deps until that SUT is selected."""
 
 from __future__ import annotations
 
-from ..adapter import SUTAdapter
-from .fake import FakeSUT
+from collections.abc import Callable
 
-# name -> zero-arg factory. Keep factories lazy so importing this module doesn't
-# require a real system's optional deps until that SUT is actually selected.
-REGISTRY: dict[str, type[SUTAdapter]] = {
-    "fake": FakeSUT,
+from ..adapter import SUTAdapter
+
+
+def _make_fake() -> SUTAdapter:
+    from .fake import FakeSUT
+
+    return FakeSUT()
+
+
+def _make_pgvector() -> SUTAdapter:
+    from .pgvector import PgvectorSUT
+
+    return PgvectorSUT()
+
+
+# name -> zero-arg factory (lazy import inside).
+REGISTRY: dict[str, Callable[[], SUTAdapter]] = {
+    "fake": _make_fake,
+    "pgvector": _make_pgvector,
 }
 
 

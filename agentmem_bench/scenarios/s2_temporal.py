@@ -25,9 +25,12 @@ class S2Temporal(Scenario):
         r1 = sut.write("Project status is green.", agent_id="lead", scope="team", workflow_id=WF)
         r2 = sut.write("Project status is red.", agent_id="lead", scope="team", workflow_id=WF)
 
-        # T1.bitemporal — does the system support at_time at all?
+        # T1.bitemporal — does the system support at_time at all? This is a
+        # descriptive capability (DESIGN: "Y/N — many do not"), not a correctness
+        # judgment, so it's INFO: absence is a fact, not a failure.
+        from .base import yn
         supports = sut.supports(Capability.TEMPORAL)
-        out.append(self.check("T1.bitemporal", supports, detail="at_time query support"))
+        out.append(self.info("T1.bitemporal", yn(supports), detail="at_time query support"))
         if not supports:
             out.append(self.na("T1.t0", "no temporal capability"))
             out.append(self.na("T1.t1", "no temporal capability"))

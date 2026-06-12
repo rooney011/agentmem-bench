@@ -44,18 +44,21 @@ class S7Operational(Scenario):
             write_usd += getattr(r, "usd", 0.0) or 0.0
 
         search_ms: list[float] = []
+        search_usd = 0.0
         for i in range(N_SEARCHES):
             q = writes[i % len(writes)]["query"]
             t0 = time.perf_counter()
             sut.search(q, agent_id="reader", workflow_id=WF, top_k=5)
             search_ms.append((time.perf_counter() - t0) * 1000)
+            # adapters that incur per-search cost (e.g. embeddings) expose it here
+            search_usd += float(getattr(sut, "last_search_usd", 0.0) or 0.0)
 
+        note = "no LLM/embedding cost" if (write_usd == 0 and search_usd == 0) else ""
         return [
             self.info("Op.write_p50_ms", round(_pct(write_ms, 50), 3)),
             self.info("Op.write_p95_ms", round(_pct(write_ms, 95), 3)),
             self.info("Op.search_p50_ms", round(_pct(search_ms, 50), 3)),
             self.info("Op.search_p95_ms", round(_pct(search_ms, 95), 3)),
-            self.info("Op.write_$_per_1k", round((write_usd / max(1, len(writes))) * 1000, 4),
-                      detail="FakeSUT has no LLM/embedding cost"),
-            self.info("Op.search_$_per_1k", 0.0, detail="FakeSUT has no LLM/embedding cost"),
+            self.info("Op.write_$_per_1k", round((write_usd / max(1, len(writes))) * 1000, 4), detail=note),
+            self.info("Op.search_$_per_1k", round((search_usd / max(1, N_SEARCHES)) * 1000, 4), detail=note),
         ]

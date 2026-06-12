@@ -45,6 +45,7 @@ class WriteResult:
     id: str
     created_at: datetime
     ok: bool = True
+    usd: float = 0.0  # cost of this write (extraction + embedding), for S7
     raw: Any = None  # raw SUT response, for audit
 
 
