@@ -36,6 +36,11 @@ class S2Temporal(Scenario):
             out.append(self.na("T1.t1", "no temporal capability"))
             return out
 
+        # Wait for the system to process the contradiction (e.g. Zep extracts facts
+        # + invalidates the old one asynchronously, ~tens of seconds) — once "red"
+        # is the current fact, the temporal state has settled. Instant for
+        # in-process SUTs. Then run the point-in-time queries.
+        self.settle(sut, query="Project status", agent_id="reader", workflow_id=WF, needle="red")
         try:
             at_t0 = sut.search("Project status", agent_id="reader", workflow_id=WF, at_time=r1.created_at)
             at_t1 = sut.search("Project status", agent_id="reader", workflow_id=WF, at_time=r2.created_at)
