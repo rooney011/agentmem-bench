@@ -6,6 +6,9 @@ policy's documented semantics.
 
 from __future__ import annotations
 
+import os
+import time
+
 from ..adapter import SUTAdapter, Unsupported
 from ..types import Capability
 from .base import Scenario, MetricResult
@@ -23,9 +26,22 @@ class S6Policy(Scenario):
         """Configure the policy FIRST, then create the conflict, then read — so it
         works for both write-time enforcers and read-time resolvers."""
         sut.setup()
+        # Space sub-runs to stay under the extraction LLM's per-minute rate limit
+        # (AgentMem's Gemini RPM): S6 fires many conflict-detection calls in a burst
+        # otherwise → backend 5xx. AMBENCH_SUBRUN_PACE seconds between sub-runs; default 0.
+        subrun_pace = float(os.environ.get("AMBENCH_SUBRUN_PACE") or 0)
+        if subrun_pace:
+            time.sleep(subrun_pace)
         sut.set_policy(policy, workflow_id=WF)
         sut.write("Deadline is Friday.", agent_id="planner", scope="team", role="planner", workflow_id=WF)
         self.settle(sut, query="Deadline", agent_id="planner", workflow_id=WF, needle="friday")
+        # Space the conflicting write. S1/S6 test policy fidelity, not true
+        # simultaneity (that's S4) — and some write-time enforcers race/500 on
+        # near-simultaneous conflicting writes (a real backend finding for AgentMem).
+        # AMBENCH_WRITE_PACE adds seconds between the two writes; default 0.
+        pace = float(os.environ.get("AMBENCH_WRITE_PACE") or 0)
+        if pace:
+            time.sleep(pace)
         sut.write("Deadline is Monday.", agent_id="executor", scope="team", role="executor", workflow_id=WF)
         return [h.content.lower() for h in sut.search("Deadline", agent_id="reader", workflow_id=WF)]
 
