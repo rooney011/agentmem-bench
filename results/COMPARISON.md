@@ -1,6 +1,6 @@
 # agentmem-bench — cross-system comparison
 
-Generated from 20 run(s) in `runs/`. Per (SUT, scenario) the most
+Generated from 24 run(s) in `runs/`. Per (SUT, scenario) the most
 recent run with real metrics is used (provenance at the bottom). FakeSUT is
 the in-process reference, not a system under test.
 
@@ -21,12 +21,11 @@ the in-process reference, not a system under test.
 | S4 | S4.lossless | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y |
 | S4 | S4.deterministic | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y |
 | S5 | S5.leakage_rate | ✅ 0.0% | ✅ 0.0% | — N/A | — N/A | ✅ 0.0% | ✅ 0.0% | ✅ 0.0% | ✅ 0.0% |
-| S6 | P.ignore.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | · | ✅ Y |
-| S6 | P.timestamp_wins.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | · | ✅ Y |
-| S6 | P.planner_wins.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | · | ✅ Y |
-| S6 | P.human_in_loop.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | · | ✅ Y |
-| S6 | P.human_in_loop.surfaced | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | · | ✅ Y |
-| S6 | s6_policy.run | · | · | · | · | · | · | 💥 crash | · |
+| S6 | P.ignore.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y | ✅ Y |
+| S6 | P.timestamp_wins.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y | ✅ Y |
+| S6 | P.planner_wins.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y | ✅ Y |
+| S6 | P.human_in_loop.correct | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y | ✅ Y |
+| S6 | P.human_in_loop.surfaced | — N/A | — N/A | — N/A | — N/A | — N/A | — N/A | ✅ Y | ✅ Y |
 | S7 | Op.write_p50_ms | ℹ️ 307.395 | ℹ️ 1142.688 | ℹ️ 304.815 | ℹ️ 20965.427 | ℹ️ 2221.558 | ℹ️ 302.811 | ℹ️ 1004.919 | ℹ️ 0.038 |
 | S7 | Op.write_p95_ms | ℹ️ 451.54 | ℹ️ 1450.572 | ℹ️ 416.372 | ℹ️ 28167.986 | ℹ️ 7172.466 | ℹ️ 404.217 | ℹ️ 1084.248 | ℹ️ 0.11 |
 | S7 | Op.search_p50_ms | ℹ️ 308.97 | ℹ️ 507.021 | ℹ️ 302.367 | ℹ️ 1918.594 | ℹ️ 1869.841 | ℹ️ 304.328 | ℹ️ 891.796 | ℹ️ 0.28 |
@@ -44,7 +43,7 @@ the in-process reference, not a system under test.
 | cognee | 1 | 0 | 16 | 0 | 7 |
 | supermemory | 4 | 1 | 12 | 0 | 7 |
 | langmem | 5 | 0 | 12 | 0 | 7 |
-| agentmem | 7 | 2 | 3 | 1 | 7 |
+| agentmem | 12 | 2 | 3 | 0 | 7 |
 | fake | 17 | 0 | 0 | 0 | 7 |
 
 ## Provenance
@@ -56,7 +55,7 @@ the in-process reference, not a system under test.
 | agentmem | S3 | `2026-06-12-133803` |
 | agentmem | S4 | `2026-06-12-133803` |
 | agentmem | S5 | `2026-06-13-055841` |
-| agentmem | S6 | `2026-06-13-055841` |
+| agentmem | S6 | `2026-06-13-085930` |
 | agentmem | S7 | `2026-06-13-055841` |
 | cognee | S1 | `2026-06-13-053651` |
 | cognee | S2 | `2026-06-13-053651` |
